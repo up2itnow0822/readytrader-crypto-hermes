@@ -1,0 +1,23 @@
+# Example Hermes mcp_servers entry for ReadyTrader-Crypto (paper)
+
+# Merge into ~/.hermes/config.yaml. Set cwd to your ReadyTrader-Crypto clone.
+
+mcp_servers:
+  readytrader-crypto:
+    command: python
+    args:
+      - app/main.py
+    cwd: /path/to/ReadyTrader-Crypto
+    timeout: 120
+    connect_timeout: 60
+    env:
+      PAPER_MODE: "true"
+      LIVE_TRADING_ENABLED: "false"
+      TRADING_HALTED: "true"
+      DEV_MODE: "true"
+      EXECUTION_MODE: "cex"
+      RISK_PROFILE: "conservative"
+      EXECUTION_APPROVAL_MODE: "approve_each"
+      ALLOW_EXCHANGES: "binance,kraken,coinbase"
+      ALLOW_CEX_SYMBOLS: "btc/usdt,btc/usd"
+      ALLOW_CEX_MARKET_TYPES: "spot"
