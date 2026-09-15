@@ -3,6 +3,19 @@
 All notable changes to this skill package. Versions track `version:` in
 `skills/finance/readytrader-crypto/SKILL.md`.
 
+## 1.1.1 — 2026-09-15
+
+Doc sync for ReadyTrader-Crypto PR #7 (closes upstream issue #6), revision-qualified so the
+skill stays correct against older checkouts:
+
+- Paper `place_cex_order` with omitted/≤ 0 price now resolves via the market-data bus or
+  fails `paper_price_required` (older revisions: silent `100000.0` placeholder fill).
+- `get_cex_balance` is paper-safe from PR #7 (paper wallet view, no keys); moved out of the
+  requires-credentials class in `tool-map.md`.
+- `start_cex_private_ws` is halt/consent-gated from PR #7; `stop`/`list` deliberately stay
+  available while halted (`tool-safety.md`).
+- Pitfalls now point at PR #7 as the fix for the audit's issue-#6 defects.
+
 ## 1.1.0 — 2026-09-14
 
 Audit against ReadyTrader-Crypto `main` and hermes-agent source; every claim re-verified by

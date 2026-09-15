@@ -35,9 +35,11 @@ Companion to `tool-map.md`. This file states the rules; the map states the mecha
   (`place_cex_order`, cancel/replace, balance/order reads, `swap_tokens`, `transfer_eth`).
   Paper orders bypass that guard by design.
 - The private-update tools (`start_cex_private_ws`, `stop_cex_private_ws`,
-  `list_cex_private_updates`) check only `PAPER_MODE`; with `PAPER_MODE=false` they open
-  authenticated streams even while halted. Tracked in ReadyTrader-Crypto issue #6. One more
-  reason `PAPER_MODE` stays `true` in this profile.
+  `list_cex_private_updates`) check `PAPER_MODE` first. From ReadyTrader-Crypto PR #7
+  onward, `start_cex_private_ws` is additionally gated by `_require_live_allowed`
+  (halt + consent + venue); `stop`/`list` stay available so a halt can still stop and
+  observe streams. Before PR #7 all three opened/read authenticated streams even while
+  halted (the issue #6 gap). Either way, one more reason `PAPER_MODE` stays `true` here.
 - `ALLOW_EXCHANGES` / `ALLOW_CEX_SYMBOLS` / `ALLOW_CEX_MARKET_TYPES` are applied by the policy
   engine on the live order path only. Paper orders are not filtered; the agent enforces
   BTC-only itself.

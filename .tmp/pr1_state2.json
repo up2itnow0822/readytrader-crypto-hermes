@@ -1,0 +1,115 @@
+{
+  "owner": "up2itnow0822",
+  "repo": "readytrader-crypto-hermes",
+  "number": 1,
+  "node_id": "PR_kwDOUZ-MuM8AAAABDa0hdQ",
+  "title": "Audit repairs v1.1.0: real tool roster, Hermes naming/install mechanics, validator + CI, upstream fixes filed",
+  "state": "OPEN",
+  "is_draft": false,
+  "labels": [],
+  "author": "up2itnow0822",
+  "viewer": "up2itnow0822",
+  "head": "audit/2026-09-14-repairs",
+  "base": "main",
+  "head_sha": "bfef8341a787cbf29ad7737093548fd70a43e270",
+  "checks_sha": "bfef8341a787cbf29ad7737093548fd70a43e270",
+  "mergeable": "MERGEABLE",
+  "merge_state_status": "CLEAN",
+  "review_decision": "APPROVED",
+  "head_reviewer_pass": false,
+  "human_changes_requested": false,
+  "opinionated_reviews": [
+    {
+      "id": 5207077587,
+      "author": "cursor",
+      "is_bot": true,
+      "state": "APPROVED"
+    }
+  ],
+  "sha_bound_reviews": [
+    {
+      "id": 5207077587,
+      "database_id": 5207077587,
+      "node_id": "PRR_kwDOUZ-MuM8AAAABNl2y0w",
+      "author": "cursor",
+      "is_bot": true,
+      "state": "APPROVED",
+      "commit_oid": "b1a30952d4adfd6d1aef5ce7e0d1a163f3411f23",
+      "body": "<!-- CURSOR_AUTOMATION_ID: e2762d77-0101-41b3-b53b-7a486a9e8416 | RUN_ID: bc-413c3a06-721b-4c01-807d-ef0c73cf9ddc -->\nApproved: Cursor Bugbot and Cursor Security Agent were not running after the first check poll, so those signals were skipped, and no policy or unresolved automated-review findings require human review. No reviewers were assigned. I cannot merge from this run (read-only GitHub access).\n\n<div><a href=\"https://cursor.com/agents/bc-413c3a06-721b-4c01-807d-ef0c73cf9ddc?cursor_ref=pr_footer&cursor_cta=open_in_web\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://cursor.com/assets/images/open-in-web-dark.png\"><source media=\"(prefers-color-scheme: light)\" srcset=\"https://cursor.com/assets/images/open-in-web-light.png\"><img alt=\"Open in Web\" width=\"114\" height=\"28\" src=\"https://cursor.com/assets/images/open-in-web-dark.png\"></picture></a>&nbsp;<a href=\"https://cursor.com/automations/e2762d77-0101-41b3-b53b-7a486a9e8416\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://cursor.com/assets/images/view-automation-dark.png\"><source media=\"(prefers-color-scheme: light)\" srcset=\"https://cursor.com/assets/images/view-automation-light.png\"><img alt=\"View Automation\" width=\"141\" height=\"28\" src=\"https://cursor.com/assets/images/view-automation-dark.png\"></picture></a>&nbsp;</div>\n\n<sub>Sent by Cursor Approval Agent: Pull Request Approver</sub>\n",
+      "acked_by_viewer": true,
+      "last_edited_at": null
+    }
+  ],
+  "checks_registered": true,
+  "checks": [
+    {
+      "name": "static",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "url": "https://github.com/up2itnow0822/readytrader-crypto-hermes/actions/runs/34944165810/job/104299519635",
+      "run_id": 34944165810,
+      "database_id": 104299519635,
+      "self": false
+    },
+    {
+      "name": "static",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "url": "https://github.com/up2itnow0822/readytrader-crypto-hermes/actions/runs/34944161346/job/104299505145",
+      "run_id": 34944161346,
+      "database_id": 104299505145,
+      "self": false
+    },
+    {
+      "name": "live-smoke",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "url": "https://github.com/up2itnow0822/readytrader-crypto-hermes/actions/runs/34944165810/job/104299575290",
+      "run_id": 34944165810,
+      "database_id": 104299575290,
+      "self": false
+    },
+    {
+      "name": "live-smoke",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "url": "https://github.com/up2itnow0822/readytrader-crypto-hermes/actions/runs/34944161346/job/104299570654",
+      "run_id": 34944161346,
+      "database_id": 104299570654,
+      "self": false
+    },
+    {
+      "name": "Cursor Approval Agent: Pull Request Approver",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "url": "https://cursor.com/agents/bc-d02a6867-476a-4ce0-9bfd-5b431415ff43",
+      "run_id": null,
+      "database_id": 104299510993,
+      "self": false
+    }
+  ],
+  "pending_checks": [],
+  "failing_checks": [],
+  "unresolved_threads": [],
+  "silent_resolved_threads": [],
+  "pr_comments": [
+    {
+      "id": "IC_kwDOUZ-MuM8AAAABUW7qVw",
+      "database_id": 5661190743,
+      "author": "chatgpt-codex-connector",
+      "is_bot": true,
+      "body": "You have reached your Codex usage limits for code reviews. You can see your limits in the [Codex usage dashboard](https://chatgpt.com/codex/cloud/settings/usage).",
+      "url": "https://github.com/up2itnow0822/readytrader-crypto-hermes/pull/1#issuecomment-5661190743",
+      "acked_by_viewer": true,
+      "last_edited_at": null
+    }
+  ],
+  "unacked_comments": [],
+  "unacked_review_summaries": [],
+  "skip_reason": null,
+  "blockers": [
+    "no reviewer pass on current head"
+  ],
+  "done": false,
+  "body": "Full audit of this package against ground truth \u2014 ReadyTrader-Crypto `main` (server launched over MCP stdio, 29 tools listed and exercised) and hermes-agent source (`tools/mcp_tool.py`, `tools/skills_hub.py`, `tools/skill_manager_tool.py`, `tests/skills/test_authoring_standards.py`) \u2014 followed by repairs, a mutation-tested validator, and an independent adversarial re-review whose 14 findings are all folded in.\n\n**Recommend squash-merge** (the branch carries 4 relocation commits because the GitHub connector cannot move files).\n\n## What was wrong (severity-ranked)\n\n| # | Sev | Finding | Evidence |\n|---|-----|---------|----------|\n| 1 | Critical | `get_health`, `get_metrics_snapshot`, `list_pending_executions`, `confirm_execution` do not exist as MCP tools; step 1 of the old workflow could never run | `server.py` + `app/tools/*.py` register 29 tools; health/metrics/approvals are HTTP-only in `api_server.py` |\n| 2 | Critical | Tool names documented as `mcp_readytrader-crypto_*`; Hermes registers `mcp__readytrader_crypto__<tool>` | `tools/mcp_tool.py` `sanitize_mcp_name_component` + `mcp_prefixed_tool_name` (called directly to confirm) |\n| 3 | Critical | Install instructions targeted a Hermes checkout's `optional-skills/`, which is the Nous contribution tree and is never loaded; SKILL.md at repo root is also not installable by the hub (`owner/repo/<subdir>` required) | `tools/skill_manager_tool.py::_skills_dir`, `optional-skills/DESCRIPTION.md`, `GitHubSource.fetch` |\n| 4 | Critical | Example config `command: python` / `args: [app/main.py]` launched a process that died with `ModuleNotFoundError: No module named 'server'` | reproduced; fixed upstream in ReadyTrader-Crypto #5 |\n| 5 | Critical (upstream) | Paper `place_cex_order` crashed on every call (`execute_trade() got an unexpected keyword argument 'agent_id'`); upstream tests mocked the engine | reproduced over stdio; fixed in ReadyTrader-Crypto #5 with unmocked tests |\n| 6 | High | `description` 67 chars > Hermes hardline 60 \u2014 failed Hermes' own `test_authoring_standards` | test run before/after |\n| 7 | High | `references/tool-map.md` never referenced from SKILL.md \u2192 hub installs silently dropped it; SKILL.md pointed at `docs/`, absent post-install | `_referenced_support_paths` run on old vs new SKILL.md |\n| 8 | High | `approve_each` described as returning proposals; in paper mode it never does, and upstream the live path compared an Enum to a string (dead code) | `execution.py::_maybe_propose`; fixed upstream in #5 |\n| 9 | High | `get_crypto_price` returns a sentence, not a number; procedure now takes `close` from `fetch_ohlcv` | `market_data.py` |\n| 10 | Medium | Private-WS tools bypass the halt flag; `ALLOW_*` allowlists are live-path only; `get_cex_balance` needs real keys even in paper; paper fill uses placeholder `100000.0` when price \u2264 0 | documented; filed as ReadyTrader-Crypto #6 |\n| 11 | Medium | AGENTS.md \"Verification\" listed checks nothing ran; no CI, CHANGELOG, .gitignore | added |\n| 12 | Low | `READYTRADER_ROOT` mentioned but the knob is `cwd`; `DEV_MODE=true` not needed for stdio; DOX index listed a folder with no AGENTS.md | fixed |\n\n## What changed\n- Skill moved to `skills/finance/readytrader-crypto/` (Hermes `<category>/<name>` layout). All three install paths (hub GitHub-source, hub raw-URL, manual copy) now work; the bundle stays free of repo files.\n- `SKILL.md` rewritten to Hermes authoring structure; passes Hermes' `tests/skills/test_authoring_standards.py` (6/6) when vendored into the fork.\n- `references/` rewritten from the verified 29-tool roster with per-tool paper-safety classes and the HTTP-only substitutes.\n- `docs/HERMES_INTEGRATION.md` rewritten and mirrored to ReadyTrader-Crypto in #5.\n- `scripts/validate.py`: frontmatter, hub reference-fetch simulation, config parity, snake_case identifier audit across every markdown file (phantoms only allowed in negated sentences), env-var cross-check, links, hygiene, DOX links, and `--live` (launches `server.py` over MCP stdio, asserts the roster, runs deposit \u2192 risk \u2192 paper order). Online mode fails closed. Mutation-tested; `--live` is green on the #5 branch and red on `main` with the exact upstream error.\n- `CHANGELOG.md` 1.1.0, `.gitignore`, DOX docs for `skills/`, `docs/`, `scripts/`.\n\n## One manual step\n`.github/workflows/validate.yml` could not be pushed through the GitHub connector (workflow files require a `workflows` permission it lacks). Add it from the file attached in the session, or run `python3 scripts/validate.py` locally \u2014 the file contents are in the session report. It runs the static checks on every push and a weekly `live-smoke` job against ReadyTrader-Crypto `main` (red until #5 merges, which is the honest signal).\n\n## Upstream\n- ReadyTrader-Crypto #5 \u2014 code + docs fixes (merge first; the skill's Procedure step 5 depends on it)\n- ReadyTrader-Crypto #6 \u2014 remaining live-safety gaps\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01BBe1Kqh4gfzfzifZU2AhwR"
+}
