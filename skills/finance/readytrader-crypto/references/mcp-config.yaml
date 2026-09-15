@@ -1,0 +1,37 @@
+# Hermes `mcp_servers` entry for ReadyTrader-Crypto (paper profile).
+# Merge into ~/.hermes/config.yaml, then start a fresh Hermes session.
+#
+# Replace /path/to/ReadyTrader-Crypto with your clone. `command` must be the
+# interpreter that has ReadyTrader's requirements installed (its own venv);
+# on Windows use .venv\Scripts\python.exe.
+#
+# Key facts (verified against ReadyTrader-Crypto main + hermes-agent source):
+# - Entrypoint is server.py. `python app/main.py` fails with
+#   "ModuleNotFoundError: No module named 'server'" because Python puts app/ on
+#   sys.path instead of the repo root.
+# - Hermes registers tools as mcp__readytrader_crypto__<tool>
+#   (server-name hyphens become underscores; delimiter is a double underscore).
+# - timeout = per-tool-call seconds (Hermes default 300);
+#   connect_timeout = startup handshake seconds (Hermes default 60).
+# - No exchange API keys are needed for the paper profile. If you ever add
+#   CEX_<EXCHANGE>_API_KEY / _API_SECRET, they must be trade+read only.
+
+mcp_servers:
+  readytrader-crypto:
+    command: /path/to/ReadyTrader-Crypto/.venv/bin/python
+    args:
+      - server.py
+    cwd: /path/to/ReadyTrader-Crypto
+    timeout: 120
+    connect_timeout: 60
+    env:
+      PAPER_MODE: "true"
+      LIVE_TRADING_ENABLED: "false"
+      TRADING_HALTED: "true"
+      DEV_MODE: "false"
+      EXECUTION_MODE: "cex"
+      RISK_PROFILE: "conservative"
+      EXECUTION_APPROVAL_MODE: "approve_each"
+      ALLOW_EXCHANGES: "binance,kraken,coinbase"
+      ALLOW_CEX_SYMBOLS: "btc/usdt,btc/usd"
+      ALLOW_CEX_MARKET_TYPES: "spot"

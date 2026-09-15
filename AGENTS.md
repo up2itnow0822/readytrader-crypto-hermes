@@ -5,12 +5,14 @@
 
 ## Purpose
 
-Public Hermes optional skill package for ReadyTrader-Crypto BTC paper trading via stdio MCP. Canonical land target for the skill (prefer this repo over forking Hermes core).
+Public Hermes Agent skill package for ReadyTrader-Crypto BTC **paper** trading over stdio MCP.
+Canonical home of the skill; the trading stack itself lives in ReadyTrader-Crypto.
 
 ## Ownership
 
 - Owner: Agent Economy, LLC / Bill Wilson (@up2itnow0822)
-- Companion stack: https://github.com/up2itnow0822/ReadyTrader-Crypto
+- Companion stack: https://github.com/up2itnow0822/ReadyTrader-Crypto (source of truth for tools, env vars, guards)
+- Hermes contract: https://github.com/up2itnow0822/hermes-agent (`tools/mcp_tool.py`, `tools/skills_hub.py`, `tools/skill_manager_tool.py`, `tests/skills/test_authoring_standards.py`)
 
 ## Core Contract
 
@@ -34,46 +36,39 @@ Every meaningful change requires a DOX pass. Update the closest owning AGENTS.md
 
 ## Local Contracts
 
-- `SKILL.md` — Hermes skill frontmatter + paper-first BTC workflow
-- `references/` — MCP YAML snippet, tool map, tool safety (pre–Phase 4)
-- `docs/HERMES_INTEGRATION.md` — operator install (keep aligned with ReadyTrader-Crypto copy)
-- License is MIT; never commit secrets or live CEX credentials
+- `skills/finance/readytrader-crypto/` — the installable skill (`SKILL.md` + `references/`); Hermes layout `<category>/<name>/`
+- `docs/HERMES_INTEGRATION.md` — operator guide, mirrored to ReadyTrader-Crypto `docs/HERMES_INTEGRATION.md`
+- `scripts/validate.py` — the repo's verification gate; CI runs it (`.github/workflows/validate.yml`)
+- `CHANGELOG.md` — versioned; bump `version:` in `SKILL.md` in the same change
+- License is MIT; never commit secrets, exchange keys, or machine-local paths
 
 ## Work Guidance
 
-- Paper-first only in skill guidance: `PAPER_MODE=true`, `LIVE_TRADING_ENABLED=false`, `TRADING_HALTED=true`
-- Do not instruct agents to enable live trading or confirm live proposals
-- Keep Hermes install path: `optional-skills/finance/readytrader-crypto`
-- When ReadyTrader operator docs change, sync `docs/HERMES_INTEGRATION.md` and fix local links
-- Prefer this public repo as the skill land target; do not grow Hermes core tools for ReadyTrader
+- Every tool name, env var, file path, and Hermes mechanic stated in this repo must be verified against ReadyTrader-Crypto `main` and hermes-agent source before it is written; cite the file when in doubt
+- Paper-first only: `PAPER_MODE=true`, `LIVE_TRADING_ENABLED=false`, `TRADING_HALTED=true`, `DEV_MODE=false`; never instruct agents to enable live trading or approve live proposals
+- Entrypoint is `server.py`; Hermes tool names are `mcp__readytrader_crypto__<tool>`
+- Runtime install target is `~/.hermes/skills/finance/readytrader-crypto/` (hub GitHub/URL install or manual copy); `optional-skills/` in a Hermes checkout is a contribution tree only
+- `SKILL.md` must reference every file under `references/` by path — Hermes hub installs only fetch referenced files
+- Keep `SKILL.md` within Hermes authoring rules: description ≤ 60 chars ending in a period, `name` == directory name, `platforms` set, no machine-local paths
+- When `docs/HERMES_INTEGRATION.md` changes, open a PR to ReadyTrader-Crypto with the same content
+- Do not grow Hermes core tools for ReadyTrader; capability stays at the MCP edge plus this skill
 
 ## Verification
 
-- README install path and mcp_servers example match `references/mcp-config.yaml`
-- `SKILL.md` frontmatter valid; relative links under `references/` resolve
-- `LICENSE` is MIT; repo visibility public
-- No secrets in examples
-
-## Hierarchy
-
-- Root AGENTS.md is the DOX rail for this small skill package
-- Child AGENTS.md files own durable subtrees listed below
-
-## Closeout
-
-1. Re-check changed paths against the DOX chain
-2. Update nearest owning docs and indexes
-3. Remove stale or contradictory text
-4. Report docs intentionally left unchanged and why
+- `python3 scripts/validate.py` passes (online) or `python3 scripts/validate.py --offline` (no network); CI: `.github/workflows/validate.yml` on push, PR, and weekly
+- Live check: `python3 scripts/validate.py --offline --live --rt-root <ReadyTrader clone> --rt-python <its venv python>` (CI `live-smoke` job, weekly against `main`)
 
 ## User Preferences
 
 - Fail closed / paper-first for all skill instructions
 - Live dust trades out of scope until dedicated ReadyTrader Phase 4 UAT
+- Repos must stay correct and functional; when the upstream stack breaks a documented path, say so in `SKILL.md` Pitfalls/Prerequisites with the upstream PR/issue number, and file it upstream rather than papering over it
 
 ## Child DOX Index
 
 | Path | Owns |
 |------|------|
-| [docs/AGENTS.md](docs/AGENTS.md) | Operator docs mirrored from ReadyTrader |
-| [references/](references/) | Parent-owned MCP snippets and safety refs (no nested AGENTS.md) |
+| [skills/AGENTS.md](skills/AGENTS.md) | Skill bundles (`finance/readytrader-crypto/`): SKILL.md authoring rules and references/ contents |
+| [docs/AGENTS.md](docs/AGENTS.md) | Operator docs mirrored to ReadyTrader-Crypto |
+| [scripts/AGENTS.md](scripts/AGENTS.md) | Validator and CI contract |
+| Parent retains: repo purpose, ownership, paper-first policy, release/versioning, cross-repo sync rules |
