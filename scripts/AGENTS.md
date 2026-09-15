@@ -14,7 +14,8 @@ push, pull request, and a weekly schedule so upstream drift is caught without a 
 
 - `validate.py --offline` must pass with no network (uses vendored `EXPECTED_TOOLS`)
 - `validate.py` (online) fetches ReadyTrader-Crypto `docs/TOOLS.md`, `app/core/settings.py`, `env.example` from `main` and fails on drift; a fetch failure is a failure, not a warning
-- `validate.py --live --rt-root <clone> --rt-python <interp>` launches `server.py` over MCP stdio and runs the paper path; CI job `live-smoke` does this weekly against `main`
+- `validate.py --live --rt-root <clone> --rt-python <interp>` launches `server.py` over MCP stdio and runs the paper path; CI job `live-smoke` does this against upstream `main` on every push/PR and weekly
+- Static scans judge only this repo's git-tracked files (rglob fallback skips nested repos/venvs) — CI checks out ReadyTrader-Crypto inside the workspace for `--live`, and that tree must never be scanned
 - Every snake_case identifier in every `*.md` must be a registered tool, a `NON_TOOL_IDENTIFIERS` entry, or a `KNOWN_PHANTOMS` entry used only in a negated paragraph
 - `--tools-md`, `--settings-py`, `--env-example` accept local copies for offline cross-checks
 - Exit code 0 = pass, 1 = failures, 2 = missing dependency (PyYAML)
