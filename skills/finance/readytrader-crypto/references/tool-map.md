@@ -29,7 +29,7 @@ Source of truth for signatures: ReadyTrader-Crypto
 
 | Tool | Why it fails in paper |
 |------|-----------------------|
-| `get_cex_balance` | `CexExecutor(auth=True)` after the paper early-return |
+| `get_cex_balance` | Paper-safe from ReadyTrader-Crypto PR #7 onward (returns the paper wallet, `mode: "paper"`, no keys). Before PR #7: `CexExecutor(auth=True)` after the paper early-return |
 | `get_cex_order`, `list_cex_open_orders`, `list_cex_orders`, `get_cex_my_trades`, `wait_for_cex_order` | Authenticated reads |
 | `cancel_cex_order`, `cancel_all_cex_orders`, `replace_cex_order` | Authenticated writes |
 

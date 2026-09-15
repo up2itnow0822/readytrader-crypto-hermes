@@ -86,6 +86,7 @@ NON_TOOL_IDENTIFIERS = {
     "user_id", "amount_usd", "portfolio_value", "market_type", "order_type", "strategy_code",
     "idempotency_key", "request_id", "confirm_token", "policy_engine", "paper_engine",
     "risk_config", "trading_halted", "live_enabled", "is_live_execution_allowed",
+    "paper_price_required", "paper_engine_missing", "_require_live_allowed",
     "validate_cex_order", "marketdata_bus", "get_balances", "get_fear_greed_index",
     "api_server", "env_private_key", "cb_mpc_2pc", "ccxt_rest",
     # Hermes config keys / modules

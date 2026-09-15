@@ -1,7 +1,7 @@
 ---
 name: readytrader-crypto
 description: "Paper-first BTC trading via ReadyTrader-Crypto MCP."
-version: 1.1.0
+version: 1.1.1
 author: Bill Wilson (up2itnow0822), Hermes Agent
 license: MIT
 tags: [bitcoin, crypto, trading, readytrader, cex, paper-trading, mcp]
@@ -78,8 +78,9 @@ Paper-safe tools (no credentials, no live side effects):
 | `place_cex_order(symbol, side, amount, order_type, price, exchange)` | Routes to the paper engine when `PAPER_MODE=true` (works from PR #5 onward) |
 | `get_cex_capabilities(exchange, symbol)` | Public exchange metadata (no auth) |
 
-Everything else (`get_cex_balance`, order query/cancel/replace, private WS,
-`transfer_eth`) needs live credentials or returns `paper_mode_not_supported`; `swap_tokens`
+Everything else (order query/cancel/replace, private WS, `transfer_eth`) needs live
+credentials or returns `paper_mode_not_supported`; `get_cex_balance` joins the paper-safe
+list from ReadyTrader-Crypto PR #7 onward (paper wallet view, no keys); `swap_tokens`
 is DEX and out of scope here — see `references/tool-map.md`.
 
 ## Procedure
@@ -107,17 +108,24 @@ is DEX and out of scope here — see `references/tool-map.md`.
   HTTP API (`api_server.py`: `/api/health`, `/api/metrics`, `/api/portfolio`,
   `/api/pending-approvals`). Do not call `get_health`, `get_metrics_snapshot`,
   `list_pending_executions`, or `confirm_execution` — they are not registered.
-- Paper `place_cex_order` fills at a placeholder `100000.0` whenever `price` is omitted or
-  ≤ 0, for every `order_type`. Always pass the real price from step 2.
-- `get_cex_balance` requires real exchange keys even in paper mode; the only MCP view of
-  paper balances is the `deposit_paper_funds` response.
+- Paper `place_cex_order` price: from ReadyTrader-Crypto PR #7 onward, an omitted/≤ 0
+  `price` resolves via the market-data bus or fails with `paper_price_required` (never a
+  fabricated fill). On older revisions it silently fills at a placeholder `100000.0`.
+  Either way, pass the explicit price from step 2 for deterministic fills.
+- `get_cex_balance`: from PR #7 onward, paper mode returns the paper wallet's balances
+  (`mode: "paper"`, no keys needed). On older revisions it requires real exchange keys
+  even in paper mode, and the only MCP view of paper balances is the
+  `deposit_paper_funds` response.
 - `EXECUTION_APPROVAL_MODE=approve_each` is defense in depth, not a workflow: in paper
   mode no proposal is ever returned. Keep it set; do not rely on it.
-- The kill switch (`TRADING_HALTED`) is checked only on the live order path. Paper orders
+- The kill switch (`TRADING_HALTED`) is checked only on the live paths. Paper orders
   execute while halted — that is expected. Allowlists (`ALLOW_*`) are likewise live-only.
+  From PR #7 onward `start_cex_private_ws` is also halt/consent-gated; before it, private
+  streams opened even while halted.
 - Hermes tool names use `mcp__readytrader_crypto__` (double underscores, no hyphens). Older
   docs that show a single-underscore, hyphenated prefix are wrong.
-- Known upstream defects are tracked in ReadyTrader-Crypto issue #6.
+- The upstream defects from the 2026-09-14 audit (issue #6) are fixed by ReadyTrader-Crypto
+  PR #7 (2026-09-15); the revision-qualified notes above cover older checkouts.
 
 ## Verification
 
