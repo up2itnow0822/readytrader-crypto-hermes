@@ -255,8 +255,33 @@ def check_config() -> dict | None:
     return entry
 
 
+def tracked_files() -> list[Path]:
+    """This repository's own files, and nothing else.
+
+    Static checks must never judge a nested checkout (CI clones ReadyTrader-Crypto
+    into the workspace for --live, venv included) — git-tracked files are the
+    authoritative universe. Fallback for non-git contexts: rglob, skipping any
+    directory that is itself a repo or a virtualenv.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(ROOT), "ls-files", "-z"],
+            capture_output=True, text=True, check=True, timeout=30,
+        ).stdout
+        return sorted(p for p in (ROOT / name for name in out.split("\0") if name) if p.is_file())
+    except Exception:
+        def foreign(p: Path) -> bool:
+            for parent in p.parents:
+                if parent == ROOT:
+                    return False
+                if (parent / ".git").exists() or (parent / "pyvenv.cfg").exists():
+                    return True
+            return False
+        return sorted(p for p in ROOT.rglob("*") if p.is_file() and ".git" not in p.parts and not foreign(p))
+
+
 def markdown_files() -> dict[Path, str]:
-    files = sorted(p for p in ROOT.rglob("*.md") if ".git" not in p.parts)
+    files = [p for p in tracked_files() if p.suffix == ".md"]
     return {p: p.read_text(encoding="utf-8") for p in files}
 
 
@@ -339,7 +364,7 @@ def credential_hits(text: str) -> list[str]:
 
 def check_hygiene() -> None:
     this = Path(__file__).resolve()
-    for path in sorted(p for p in ROOT.rglob("*") if p.is_file() and ".git" not in p.parts):
+    for path in tracked_files():
         if path.suffix not in {".md", ".yaml", ".yml", ".py", ".txt"} or path == this:
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -352,9 +377,7 @@ def check_hygiene() -> None:
 
 
 def check_dox() -> None:
-    for agents in sorted(ROOT.rglob("AGENTS.md")):
-        if ".git" in agents.parts:
-            continue
+    for agents in (p for p in tracked_files() if p.name == "AGENTS.md"):
         for target in MD_LINK_RE.findall(agents.read_text(encoding="utf-8")):
             if target.startswith(("http", "#")):
                 continue
