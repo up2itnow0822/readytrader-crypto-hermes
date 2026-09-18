@@ -21,7 +21,8 @@ Checks (each maps to a rule Hermes or ReadyTrader-Crypto actually enforces):
   env           Every env var in mcp-config.yaml is read by ReadyTrader-Crypto
                 app/core/settings.py or listed in env.example (fetched live unless --offline).
   links         Relative markdown links resolve; absolute ReadyTrader-Crypto links resolve (online).
-  hygiene       No machine-local paths, no credential-shaped strings, no legacy tool prefix.
+  hygiene       No machine-local paths, no credential-shaped strings, no legacy tool prefix,
+                no tracked scratch (.tmp/, tmp/, __pycache__/, venvs).
   dox           Every AGENTS.md link points at an existing file.
   live          (--live) Launch ReadyTrader-Crypto server.py over MCP stdio with the
                 mcp-config.yaml env, assert the 29-tool roster, and run the paper path
@@ -363,9 +364,16 @@ def credential_hits(text: str) -> list[str]:
     return hits
 
 
+SCRATCH_DIRS = {".tmp", "tmp", "__pycache__", ".venv", "venv", "node_modules"}
+
+
 def check_hygiene() -> None:
     this = Path(__file__).resolve()
     for path in tracked_files():
+        rel_parts = path.relative_to(ROOT).parts
+        if rel_parts and rel_parts[0] in SCRATCH_DIRS:
+            fail(f"{path.relative_to(ROOT)}: scratch/tooling output is tracked; keep {rel_parts[0]}/ out of the repo (see .gitignore)")
+            continue
         if path.suffix not in {".md", ".yaml", ".yml", ".py", ".txt"} or path == this:
             continue
         text = path.read_text(encoding="utf-8", errors="replace")

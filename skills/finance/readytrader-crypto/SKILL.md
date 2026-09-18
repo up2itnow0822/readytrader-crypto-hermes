@@ -1,7 +1,7 @@
 ---
 name: readytrader-crypto
 description: "Paper-first BTC trading via ReadyTrader-Crypto MCP."
-version: 1.1.1
+version: 1.1.2
 author: Bill Wilson (up2itnow0822), Hermes Agent
 license: MIT
 tags: [bitcoin, crypto, trading, readytrader, cex, paper-trading, mcp]

@@ -97,11 +97,17 @@ paper path is broken upstream (it is, on revisions before ReadyTrader-Crypto PR 
 
 ## Upstream status
 
-- ReadyTrader-Crypto [PR #5](https://github.com/up2itnow0822/ReadyTrader-Crypto/pull/5) — fixes the
-  paper `place_cex_order` crash, the enum/string settings comparisons, `python app/main.py`, and
-  the stale tool names in its docs. Until it merges, Procedure step 5 in the skill fails.
-- ReadyTrader-Crypto [issue #6](https://github.com/up2itnow0822/ReadyTrader-Crypto/issues/6) — remaining
-  live-safety gaps (private-WS tools bypass the halt flag, skipped safety tests, placeholder paper price).
+- ReadyTrader-Crypto [PR #5](https://github.com/up2itnow0822/ReadyTrader-Crypto/pull/5) — merged 2026-09-15.
+  Fixed the paper `place_cex_order` crash, the enum/string settings comparisons, `python app/main.py`,
+  and the stale tool names in its docs. Procedure step 5 works on `main` from this merge onward.
+- ReadyTrader-Crypto [issue #6](https://github.com/up2itnow0822/ReadyTrader-Crypto/issues/6) — closed by
+  [PR #7](https://github.com/up2itnow0822/ReadyTrader-Crypto/pull/7) (2026-09-15): `start_cex_private_ws`
+  halt-gated, real live-safety tests, `paper_price_required` instead of a fabricated fill, paper-mode
+  `get_cex_balance`.
+- ReadyTrader-Crypto [issue #8](https://github.com/up2itnow0822/ReadyTrader-Crypto/issues/8) —
+  `EXECUTION_MODE=auto` (the default) denied every live venue check; fix in
+  [PR #9](https://github.com/up2itnow0822/ReadyTrader-Crypto/pull/9). Does not affect the paper profile
+  (this skill pins `EXECUTION_MODE=cex`).
 
 ## Related
 
