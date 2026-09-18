@@ -41,6 +41,7 @@ Every meaningful change requires a DOX pass. Update the closest owning AGENTS.md
 - `scripts/validate.py` — the repo's verification gate; CI runs it (`.github/workflows/validate.yml`)
 - `CHANGELOG.md` — versioned; bump `version:` in `SKILL.md` in the same change
 - License is MIT; never commit secrets, exchange keys, or machine-local paths
+- `.tmp/` and `tmp/` are scratch (gitignored); tooling state, PR bodies, and automerge records never land in the tree — the validator fails on tracked scratch
 
 ## Work Guidance
 
