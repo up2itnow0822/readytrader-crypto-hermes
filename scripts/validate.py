@@ -95,7 +95,7 @@ NON_TOOL_IDENTIFIERS = {
     "test_authoring_standards", "skill_manage", "related_skills", "readytrader_crypto",
     # this repo / validator
     "validate_py", "tools_md", "settings_py", "env_example", "rt_root", "rt_python",
-    "no_cache", "expected_tools",
+    "no_cache", "expected_tools", "node_modules",
 }
 REQUIRED_FM = ("name", "description", "version", "author", "license", "platforms")
 VALID_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
