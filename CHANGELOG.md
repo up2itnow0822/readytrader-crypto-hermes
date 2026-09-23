@@ -3,6 +3,15 @@
 All notable changes to this skill package. Versions track `version:` in
 `skills/finance/readytrader-crypto/SKILL.md`.
 
+## 1.1.2 — 2026-09-18
+
+- Repo hygiene: automerge scratch (`.tmp/`) had been committed to `main`; removed, `.tmp/`/`tmp/`
+  gitignored, and `scripts/validate.py` now fails on any tracked scratch/tooling directory.
+- README "Upstream status" reflects the merged state: PR #5, PR #7 (closed issue #6), and PR #9
+  (merged 2026-09-23, closed issue #8 — `EXECUTION_MODE=auto` routing; paper profile never affected).
+- `references/tool-map.md`: `get_cex_balance` listed as paper-safe (its post-PR #7 behavior) with the
+  pre-PR #7 caveat, instead of sitting in the requires-credentials table.
+
 ## 1.1.1 — 2026-09-15
 
 Doc sync for ReadyTrader-Crypto PR #7 (closes upstream issue #6), revision-qualified so the

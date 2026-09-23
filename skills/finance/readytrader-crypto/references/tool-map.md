@@ -24,12 +24,12 @@ Source of truth for signatures: ReadyTrader-Crypto
 | `validate_trade_risk` | Risk Guardian check | Pure validation |
 | `place_cex_order` | Paper order via the paper engine when `PAPER_MODE=true` | Pass `price` explicitly; broken before ReadyTrader-Crypto PR #5 (`agent_id` TypeError) |
 | `get_cex_capabilities` | Public exchange metadata | `auth=False`; blocked only if `EXECUTION_MODE=dex` |
+| `get_cex_balance` | Paper wallet balances (`mode: "paper"`, no keys) | Paper-safe from ReadyTrader-Crypto PR #7 onward; before PR #7 it opened `CexExecutor(auth=True)` and failed without keys |
 
 ## Requires live credentials (authenticated exchange session even when `PAPER_MODE=true`)
 
 | Tool | Why it fails in paper |
 |------|-----------------------|
-| `get_cex_balance` | Paper-safe from ReadyTrader-Crypto PR #7 onward (returns the paper wallet, `mode: "paper"`, no keys). Before PR #7: `CexExecutor(auth=True)` after the paper early-return |
 | `get_cex_order`, `list_cex_open_orders`, `list_cex_orders`, `get_cex_my_trades`, `wait_for_cex_order` | Authenticated reads |
 | `cancel_cex_order`, `cancel_all_cex_orders`, `replace_cex_order` | Authenticated writes |
 
