@@ -104,10 +104,10 @@ paper path is broken upstream (it is, on revisions before ReadyTrader-Crypto PR 
   [PR #7](https://github.com/up2itnow0822/ReadyTrader-Crypto/pull/7) (2026-09-15): `start_cex_private_ws`
   halt-gated, real live-safety tests, `paper_price_required` instead of a fabricated fill, paper-mode
   `get_cex_balance`.
-- ReadyTrader-Crypto [issue #8](https://github.com/up2itnow0822/ReadyTrader-Crypto/issues/8) —
-  `EXECUTION_MODE=auto` (the default) denied every live venue check; fix in
-  [PR #9](https://github.com/up2itnow0822/ReadyTrader-Crypto/pull/9). Does not affect the paper profile
-  (this skill pins `EXECUTION_MODE=cex`).
+- ReadyTrader-Crypto [issue #8](https://github.com/up2itnow0822/ReadyTrader-Crypto/issues/8) — closed by
+  [PR #9](https://github.com/up2itnow0822/ReadyTrader-Crypto/pull/9) (merged 2026-09-23): `EXECUTION_MODE=auto`
+  (the default) now routes like `hybrid` instead of denying every live venue check. Never affected the
+  paper profile (this skill pins `EXECUTION_MODE=cex`).
 
 ## Related
 
