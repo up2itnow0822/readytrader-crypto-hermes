@@ -14,7 +14,7 @@ push, pull request, and a weekly schedule so upstream drift is caught without a 
 
 - `validate.py --offline` must pass with no network (uses vendored `EXPECTED_TOOLS`)
 - `validate.py` (online) fetches ReadyTrader-Crypto `docs/TOOLS.md`, `app/core/settings.py`, `env.example` from `main` and fails on drift; a fetch failure is a failure, not a warning
-- `validate.py --live --rt-root <clone> --rt-python <interp>` launches `server.py` over MCP stdio and runs the paper path; CI job `live-smoke` does this against upstream `main` on every push/PR and weekly
+- `validate.py --live --rt-root <clone> --rt-python <interp>` launches `server.py` over MCP stdio and checks every tool behaviour `SKILL.md` relies on (numeric `get_crypto_price`, a price-less paper market order filled at the market price, keyless `get_news` answering no data, live-account tools refusing in paper mode); CI job `live-smoke` does this against upstream `main` on every push/PR and weekly
 - Static scans judge only this repo's git-tracked files (rglob fallback skips nested repos/venvs) — CI checks out ReadyTrader-Crypto inside the workspace for `--live`, and that tree must never be scanned
 - Hygiene fails on any tracked path under `SCRATCH_DIRS` (`.tmp/`, `tmp/`, `__pycache__/`, `.venv/`, `venv/`, `node_modules/`), on machine-specific paths, and on credential-shaped strings
 - Every snake_case identifier in every `*.md` must be a registered tool, a `NON_TOOL_IDENTIFIERS` entry, or a `KNOWN_PHANTOMS` entry used only in a negated paragraph
