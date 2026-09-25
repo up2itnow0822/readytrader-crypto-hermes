@@ -30,7 +30,6 @@ mcp_servers:
       TRADING_HALTED: "true"
       DEV_MODE: "false"
       EXECUTION_MODE: "cex"
-      RISK_PROFILE: "conservative"
       EXECUTION_APPROVAL_MODE: "approve_each"
       ALLOW_EXCHANGES: "binance,kraken,coinbase"
       ALLOW_CEX_SYMBOLS: "btc/usdt,btc/usd"
