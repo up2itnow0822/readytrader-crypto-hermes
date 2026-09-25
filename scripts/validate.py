@@ -25,8 +25,11 @@ Checks (each maps to a rule Hermes or ReadyTrader-Crypto actually enforces):
                 no tracked scratch (.tmp/, tmp/, __pycache__/, venvs).
   dox           Every AGENTS.md link points at an existing file.
   live          (--live) Launch ReadyTrader-Crypto server.py over MCP stdio with the
-                mcp-config.yaml env, assert the 29-tool roster, and run the paper path
-                (deposit -> validate_trade_risk -> place_cex_order with explicit price).
+                mcp-config.yaml env, assert the 29-tool roster, and check every tool
+                behaviour SKILL.md relies on: get_crypto_price carries a numeric data.price;
+                deposit -> validate_trade_risk -> a paper market order sent WITHOUT a price
+                fills at the market price; get_news without keys answers no data; the
+                live-account tools refuse in the paper profile.
 
 Online mode (the default) treats any upstream fetch failure as a failure so drift checks
 cannot silently pass. Exit 0 when everything passes, 1 otherwise. Requires PyYAML.
@@ -90,6 +93,9 @@ NON_TOOL_IDENTIFIERS = {
     "paper_price_required", "paper_engine_missing", "_require_live_allowed",
     "validate_cex_order", "marketdata_bus", "get_balances", "get_fear_greed_index",
     "api_server", "env_private_key", "cb_mpc_2pc", "ccxt_rest",
+    # ReadyTrader answer codes the skill tells the agent how to handle
+    "risk_blocked", "limit_not_marketable", "insufficient_funds", "not_configured", "source_unavailable", "cex_error",
+    "allowed_while_halted",
     # Hermes config keys / modules
     "mcp_servers", "connect_timeout", "skills_hub", "mcp_tool", "skill_manager_tool",
     "test_authoring_standards", "skill_manage", "related_skills", "readytrader_crypto",
@@ -409,15 +415,26 @@ async def main():
     async with Client(StdioTransport(command=sys.executable, args=list(cfg["args"]), cwd=rt_root, env=env)) as c:
         names = {t.name for t in await c.list_tools()}
         out["missing"] = sorted(expected - names); out["extra"] = sorted(names - expected)
+        r = json.loads(txt(await c.call_tool("get_crypto_price", {"symbol": "BTC/USDT"})))
+        price = (r.get("data") or {}).get("price")
+        out["price"] = price if isinstance(price, (int, float)) and not isinstance(price, bool) else None
+        out["price_answer"] = json.dumps(r)[:300]
         r = json.loads(txt(await c.call_tool("deposit_paper_funds", {"asset": "USDT", "amount": 10000.0})))
         out["deposit_ok"] = bool(r.get("ok"))
         r = json.loads(txt(await c.call_tool("validate_trade_risk", {"side": "buy", "symbol": "BTC/USDT", "amount_usd": 100.0, "portfolio_value": 10000.0})))
         out["risk_ok"] = bool(r.get("ok"))
         try:
-            r = json.loads(txt(await c.call_tool("place_cex_order", {"symbol": "BTC/USDT", "side": "buy", "amount": 0.001, "order_type": "market", "price": 65000.0})))
-            out["order_mode"] = (r.get("data") or {}).get("mode"); out["order_ok"] = bool(r.get("ok"))
+            # The Procedure's order: a market order with no price; the server must fill it at its market price.
+            r = json.loads(txt(await c.call_tool("place_cex_order", {"symbol": "BTC/USDT", "side": "buy", "amount": 0.001, "order_type": "market"})))
+            data = r.get("data") or {}
+            out["order_mode"] = data.get("mode"); out["order_ok"] = bool(r.get("ok"))
+            out["fill_price"] = (data.get("fill") or {}).get("price"); out["order_answer"] = json.dumps(r)[:300]
         except Exception as exc:
             out["order_ok"] = False; out["order_error"] = str(exc)[:300]
+        r = json.loads(txt(await c.call_tool("get_news", {})))
+        out["news"] = {"ok": bool(r.get("ok")), "code": (r.get("error") or {}).get("code"), "text": json.dumps(r.get("data"))[:300]}
+        r = json.loads(txt(await c.call_tool("list_cex_open_orders", {})))
+        out["account"] = {"ok": bool(r.get("ok")), "code": (r.get("error") or {}).get("code")}
     print(json.dumps(out))
 asyncio.run(main())
 '''
@@ -444,8 +461,23 @@ def check_live(rt_root: Path, rt_python: Path, entry: dict | None, tmp: Path) ->
         fail("--live: deposit_paper_funds failed")
     if not out["risk_ok"]:
         fail("--live: validate_trade_risk failed")
+    price = out.get("price")
+    if not price or price <= 0:
+        fail(f"--live: get_crypto_price has no positive numeric data.price (SKILL.md Procedure step 2): {out.get('price_answer')}")
     if not out.get("order_ok") or out.get("order_mode") != "paper":
-        fail(f"--live: paper place_cex_order failed: {out.get('order_error') or out}")
+        fail(f"--live: paper place_cex_order (market, no price) failed: {out.get('order_error') or out.get('order_answer')}")
+    elif price and price > 0:
+        fill = out.get("fill_price")
+        if not isinstance(fill, (int, float)) or abs(fill - price) / price > 0.05:
+            fail(f"--live: paper market order did not fill at the market price (market {price}, fill {fill})")
+    news = out.get("news") or {}
+    keyless_no_data = (not news.get("ok") and news.get("code") == "not_configured") or (
+        news.get("ok") and "not configured" in (news.get("text") or "").lower()  # before ReadyTrader-Crypto PR #20
+    )
+    if not keyless_no_data:
+        fail(f"--live: get_news without keys should answer no data (not_configured): {news}")
+    if (out.get("account") or {}).get("ok"):
+        fail(f"--live: list_cex_open_orders answered ok in the paper profile; the docs say live-account tools refuse: {out.get('account')}")
 
 
 def main() -> int:
