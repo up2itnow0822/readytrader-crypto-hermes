@@ -143,15 +143,18 @@ classes, and refuses live trading without explicit operator authorization.
 
 ReadyTrader registers 29 tools. Paper-safe without credentials:
 
-| Tool                                                                                         | Use                                                                    |
-| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `get_crypto_price`, `fetch_ohlcv`                                                            | BTC market data                                                        |
-| `get_sentiment`, `get_news`, `get_social_sentiment`, `get_financial_news`, `get_free_news`   | Read-only context; the keyed ones answer `not_configured` without keys |
-| `get_market_regime`, `run_backtest_simulation`, `post_market_insight`, `get_latest_insights` | Analysis and shared insights                                           |
-| `deposit_paper_funds`                                                                        | Seed the paper wallet (response includes balance)                      |
-| `validate_trade_risk`                                                                        | Risk Guardian check                                                    |
-| `place_cex_order`                                                                            | Paper order at the market price (a limit only when marketable)         |
-| `get_cex_capabilities`                                                                       | Public exchange metadata, no auth                                      |
+| Tool                                                                                         | Use                                                            |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `get_crypto_price`, `fetch_ohlcv`                                                            | BTC market data                                                |
+| `get_sentiment`, `get_news`, `get_social_sentiment`, `get_financial_news`, `get_free_news`   | Read-only context (the keyed sources need provider keys)       |
+| `get_market_regime`, `run_backtest_simulation`, `post_market_insight`, `get_latest_insights` | Analysis and shared insights                                   |
+| `deposit_paper_funds`                                                                        | Seed the paper wallet (response includes balance)              |
+| `validate_trade_risk`                                                                        | Risk Guardian check                                            |
+| `place_cex_order`                                                                            | Paper order at the market price (a limit only when marketable) |
+| `get_cex_capabilities`                                                                       | Public exchange metadata, no auth                              |
+
+Without provider keys `get_news`, `get_social_sentiment` and `get_financial_news` answer
+`not_configured` (`ok: false`): no data, not an outage.
 
 `get_cex_balance` shows the paper wallet in paper mode. The live-account tools answer
 `paper_mode_not_supported` when `PAPER_MODE=true` (paper orders fill at once and never rest on an
@@ -159,6 +162,12 @@ exchange): `get_cex_order`, `list_cex_open_orders`, `list_cex_orders`, `get_cex_
 `wait_for_cex_order`, `cancel_cex_order`, `cancel_all_cex_orders`, `replace_cex_order`,
 `start_cex_private_ws`, `stop_cex_private_ws`, `list_cex_private_updates`, `transfer_eth`. Out of scope for a
 BTC/CEX profile: `swap_tokens` (DEX; its paper branch does route to the paper engine).
+
+Older revisions (before ReadyTrader-Crypto PR #20) differ: the keyed news tools answer `ok: true`
+with an "Unavailable … not configured" sentence, a paper market order fills at any `price` it is
+given and a paper limit fills at its own price, the order reads and writes above fail with
+`cex_error` instead of `paper_mode_not_supported`, and `docker build .` builds the HTTP API
+rather than the stdio MCP server.
 
 Note that `ALLOW_EXCHANGES`, `ALLOW_CEX_SYMBOLS`, and `ALLOW_CEX_MARKET_TYPES` are enforced by
 the policy engine on the **live** order path only; paper orders are not filtered by them.
