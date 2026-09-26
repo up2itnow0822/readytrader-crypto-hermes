@@ -93,12 +93,14 @@ here — see `references/tool-map.md`.
 3. Seed paper funds if needed: `deposit_paper_funds(asset="USDT", amount=10000)`.
    Done when the response shows the balance.
 4. Size the trade and run `validate_trade_risk(side, symbol, amount_usd, portfolio_value)`.
-   Proceed only on an approved result; otherwise report the rejection reason.
+   Proceed only when `data.result.allowed` is `true`; otherwise report `data.result.reason`
+   and stop. `ok: true` only means the check ran — a refusal is `ok: true` too.
 5. Place the paper order at the market price: `place_cex_order(symbol="BTC/USDT",
-   side="buy", amount=<btc>, order_type="market")` with no `price`. Done when the response
-   has `"mode": "paper"`; report the fill price the server used. Refusals end the attempt —
-   report them, do not retry with other numbers: `risk_blocked` (the Risk Guardian refused
-   the order; `data.risk` says why), `paper_price_required` (no market price right now),
+   side="buy", amount=<btc>, order_type="market")` with no `price`. Done when `ok` is `true`
+   and `data.mode` is `"paper"`; report `data.fill.price`, the price the server used. A refusal
+   is `ok: false` with `error.code` — it ends the attempt; report it, do not retry with other
+   numbers: `risk_blocked` (the Risk Guardian refused the order; `error.data.risk` says why),
+   `paper_price_required` (no market price right now),
    `limit_not_marketable` (a limit that would rest), `insufficient_funds` (the paper wallet
    cannot pay). A `TypeError` mentioning `agent_id`
    means ReadyTrader predates PR #5 — report it and stop.
