@@ -22,8 +22,12 @@ skills install`, `hermes mcp test`) and Hermes's own MCP tool layer against the 
 - `docs/HERMES_INTEGRATION.md`: the Docker alternative is now a verified `docker run` entry that
   passes the paper flags into the container (the `docker compose exec` wrapper did not); the
   guide is byte-identical to ReadyTrader-Crypto's copy again.
+- Procedure step 4 proceeds only on `data.result.allowed` (a refusal is `ok: true` too); step 5
+  is done on `ok: true` with `data.mode` paper, and names refusals by `error.code`.
 - `scripts/validate.py --live` checks every tool behaviour the skill relies on instead of only
-  the ok flags (its old order passed a fixed price of 65000). README and root AGENTS.md now say
+  the ok flags (its old order passed a fixed price of 65000): the risk verdict both ways, the
+  market fill, keyless news, and all 12 live-account tools; the Docker block in the guide must
+  pass every paper flag into the container. README and root AGENTS.md now say
   the live CI job runs on every push and pull request, as the workflow does.
 
 ## 1.1.2 — 2026-09-23
