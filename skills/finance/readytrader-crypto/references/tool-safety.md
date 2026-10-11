@@ -8,7 +8,7 @@ Companion to `tool-map.md`. This file states the rules; the map states the mecha
   `get_social_sentiment`, `get_financial_news`, `get_free_news`, `get_market_regime`,
   `run_backtest_simulation`, `post_market_insight`, `get_latest_insights`
 - Paper wallet and risk: `deposit_paper_funds`, `validate_trade_risk`
-- Paper orders: `place_cex_order` while `PAPER_MODE=true` (always pass `price`; BTC pairs only)
+- Paper orders: `place_cex_order` while `PAPER_MODE=true` (market price: no `price` on market orders; BTC pairs only)
 - Public exchange metadata: `get_cex_capabilities`
 
 ## Blocked until the operator authorizes Phase 4 dust UAT
@@ -28,12 +28,14 @@ Companion to `tool-map.md`. This file states the rules; the map states the mecha
 - Configuring exchange API keys; keys must be trade+read only, never withdraw-capable
 - Pointing the MCP entry at the live stack (`docker-compose.live.yml`, `.env.live`)
 
-## What the controls actually do (verified against ReadyTrader-Crypto `main`, 2026-09-14)
+## What the controls actually do (verified against ReadyTrader-Crypto `main` and PR #20, 2026-09-25)
 
-- `TRADING_HALTED=true` and `LIVE_TRADING_ENABLED=false` are checked by
-  `_require_live_allowed` (`app/tools/execution.py`) on the live **order and account** tools
-  (`place_cex_order`, cancel/replace, balance/order reads, `swap_tokens`, `transfer_eth`).
-  Paper orders bypass that guard by design.
+- `LIVE_TRADING_ENABLED=false` is checked by `_require_live_allowed` (`app/tools/execution.py`)
+  on every live **order and account** tool. `TRADING_HALTED=true` refuses new live orders,
+  replacements, swaps and transfers; from ReadyTrader-Crypto PR #20, live balance/order reads
+  and cancels pass the halt (`allowed_while_halted`) so an operator can still see and cancel
+  what is open (before PR #20 the halt refused those too). Paper orders bypass that guard by
+  design.
 - The private-update tools (`start_cex_private_ws`, `stop_cex_private_ws`,
   `list_cex_private_updates`) check `PAPER_MODE` first. From ReadyTrader-Crypto PR #7
   onward, `start_cex_private_ws` is additionally gated by `_require_live_allowed`

@@ -3,7 +3,34 @@
 All notable changes to this skill package. Versions track `version:` in
 `skills/finance/readytrader-crypto/SKILL.md`.
 
-## 1.1.2 — 2026-09-18
+## 1.2.0 — 2026-09-25
+
+Re-verified against ReadyTrader-Crypto `main` and PR #20 by running the Hermes CLI (`hermes
+skills install`, `hermes mcp test`) and Hermes's own MCP tool layer against the server.
+
+- Paper orders no longer send a `price`: the Procedure places a market order and the server
+  fills it at its market price. Passing a price made the paper engine fill at that number on
+  revisions before PR #20 (a fill that never existed).
+- `get_crypto_price` documented as returning a numeric `data.price`; the Procedure uses it.
+- The Procedure and Pitfalls cover the server's refusals (`risk_blocked`, `limit_not_marketable`,
+  `insufficient_funds`, `paper_price_required`) and the keyless news answer (`not_configured`: no data).
+- `references/tool-map.md`: the live-account tools answer `paper_mode_not_supported` in the paper
+  profile (PR #20; `cex_error` before it). `references/tool-safety.md`: from PR #20 live reads
+  and cancels pass the kill switch.
+- `RISK_PROFILE` dropped from the paper profile: ReadyTrader-Crypto documents it as reserved and
+  not applied.
+- `docs/HERMES_INTEGRATION.md`: the Docker alternative is now a verified `docker run` entry that
+  passes the paper flags into the container (the `docker compose exec` wrapper did not); the
+  guide is byte-identical to ReadyTrader-Crypto's copy again.
+- Procedure step 4 proceeds only on `data.result.allowed` (a refusal is `ok: true` too); step 5
+  is done on `ok: true` with `data.mode` paper, and names refusals by `error.code`.
+- `scripts/validate.py --live` checks every tool behaviour the skill relies on instead of only
+  the ok flags (its old order passed a fixed price of 65000): the risk verdict both ways, the
+  market fill, keyless news, and all 12 live-account tools; the Docker block in the guide must
+  pass every paper flag into the container. README and root AGENTS.md now say
+  the live CI job runs on every push and pull request, as the workflow does.
+
+## 1.1.2 — 2026-09-23
 
 - Repo hygiene: automerge scratch (`.tmp/`) had been committed to `main`; removed, `.tmp/`/`tmp/`
   gitignored, and `scripts/validate.py` now fails on any tracked scratch/tooling directory.

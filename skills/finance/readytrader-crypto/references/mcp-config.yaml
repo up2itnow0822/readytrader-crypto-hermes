@@ -6,9 +6,9 @@
 # on Windows use .venv\Scripts\python.exe.
 #
 # Key facts (verified against ReadyTrader-Crypto main + hermes-agent source):
-# - Entrypoint is server.py. `python app/main.py` fails with
-#   "ModuleNotFoundError: No module named 'server'" because Python puts app/ on
-#   sys.path instead of the repo root.
+# - Entrypoint is server.py (works on every revision). Before ReadyTrader-Crypto
+#   PR #5, `python app/main.py` failed with "ModuleNotFoundError: No module named
+#   'server'" because Python put app/ on sys.path instead of the repo root.
 # - Hermes registers tools as mcp__readytrader_crypto__<tool>
 #   (server-name hyphens become underscores; delimiter is a double underscore).
 # - timeout = per-tool-call seconds (Hermes default 300);
@@ -30,7 +30,6 @@ mcp_servers:
       TRADING_HALTED: "true"
       DEV_MODE: "false"
       EXECUTION_MODE: "cex"
-      RISK_PROFILE: "conservative"
       EXECUTION_APPROVAL_MODE: "approve_each"
       ALLOW_EXCHANGES: "binance,kraken,coinbase"
       ALLOW_CEX_SYMBOLS: "btc/usdt,btc/usd"

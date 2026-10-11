@@ -1,7 +1,7 @@
 ---
 name: readytrader-crypto
 description: "Paper-first BTC trading via ReadyTrader-Crypto MCP."
-version: 1.1.2
+version: 1.2.0
 author: Bill Wilson (up2itnow0822), Hermes Agent
 license: MIT
 tags: [bitcoin, crypto, trading, readytrader, cex, paper-trading, mcp]
@@ -48,7 +48,7 @@ Don't use for:
    `cwd` at the clone. The entrypoint is `server.py`; `python app/main.py` fails with
    `ModuleNotFoundError: No module named 'server'` on revisions before ReadyTrader-Crypto PR #5.
 3. Env in that entry: `PAPER_MODE=true`, `LIVE_TRADING_ENABLED=false`, `TRADING_HALTED=true`,
-   `EXECUTION_MODE=cex`, `EXECUTION_APPROVAL_MODE=approve_each`, `RISK_PROFILE=conservative`.
+   `EXECUTION_MODE=cex`, `EXECUTION_APPROVAL_MODE=approve_each`, plus the `ALLOW_*` lists.
    No exchange API keys are needed for the paper profile.
 4. A fresh Hermes session after editing config — MCP tools register at session start.
 5. ReadyTrader-Crypto at or after PR #5 (`fix/paper-execution-path-and-enum-compare`).
@@ -68,36 +68,42 @@ Paper-safe tools (no credentials, no live side effects):
 
 | Tool | Use |
 |------|-----|
-| `get_crypto_price(symbol, exchange="binance")` | Spot price as a sentence in `data.result` (`The current price of BTC/USDT is <n> (Source: …)`) |
-| `fetch_ohlcv(symbol, timeframe="1h", limit=24)` | Candle records (`open/high/low/close/volume`) in `data.data`; the numeric price source |
+| `get_crypto_price(symbol, exchange="binance")` | Spot price as a number in `data.price` (and as a sentence in `data.result`) |
+| `fetch_ohlcv(symbol, timeframe="1h", limit=24)` | Candle records (`open/high/low/close/volume`) in `data.data` |
 | `get_sentiment()`, `get_free_news(symbol="")` | Keyless: Fear & Greed index, RSS headlines |
-| `get_news()`, `get_social_sentiment(symbol)`, `get_financial_news(symbol)` | Need provider keys; degrade to empty without them |
+| `get_news()`, `get_social_sentiment(symbol)`, `get_financial_news(symbol)` | Need provider keys; without them they answer `not_configured` (`ok: false`): no data, not an outage |
 | `get_market_regime(symbol, timeframe="1d")`, `run_backtest_simulation(strategy_code, symbol, timeframe)` | Analysis (the backtest executes the code you pass — review it first) |
 | `deposit_paper_funds(asset, amount)` | Seed the paper wallet; response includes the updated balance |
 | `validate_trade_risk(side, symbol, amount_usd, portfolio_value)` | Risk Guardian check |
-| `place_cex_order(symbol, side, amount, order_type, price, exchange)` | Routes to the paper engine when `PAPER_MODE=true` (works from PR #5 onward) |
+| `place_cex_order(symbol, side, amount, order_type, price, exchange)` | Paper order when `PAPER_MODE=true`, filled at the server's market price; omit `price` on market orders |
 | `get_cex_capabilities(exchange, symbol)` | Public exchange metadata (no auth) |
 
-Everything else (order query/cancel/replace, private WS, `transfer_eth`) needs live
-credentials or returns `paper_mode_not_supported`; `get_cex_balance` joins the paper-safe
-list from ReadyTrader-Crypto PR #7 onward (paper wallet view, no keys); `swap_tokens`
-is DEX and out of scope here — see `references/tool-map.md`.
+`get_cex_balance` shows the paper wallet (no keys, from ReadyTrader-Crypto PR #7). The
+live-account tools (order query/cancel/replace, private WS, `transfer_eth`) answer
+`paper_mode_not_supported` in the paper profile; `swap_tokens` is DEX and out of scope
+here — see `references/tool-map.md`.
 
 ## Procedure
 
 1. Confirm the server is loaded: the tool list contains `mcp__readytrader_crypto__validate_trade_risk`.
    If absent, stop and report the config/session problem — do not improvise with shell.
-2. Get a numeric price: `fetch_ohlcv(symbol="BTC/USDT", timeframe="1m", limit=1)` and take
-   `close` from the last record (fallback: parse the number out of `get_crypto_price`'s
-   `data.result` sentence). Done when you hold a positive float.
+2. Get a numeric price: `get_crypto_price(symbol="BTC/USDT")` and take `data.price`
+   (or `close` from the last `fetch_ohlcv(symbol="BTC/USDT", timeframe="1m", limit=1)`
+   record). Done when you hold a positive float; it sizes the order, it is not sent with it.
 3. Seed paper funds if needed: `deposit_paper_funds(asset="USDT", amount=10000)`.
    Done when the response shows the balance.
 4. Size the trade and run `validate_trade_risk(side, symbol, amount_usd, portfolio_value)`.
-   Proceed only on an approved result; otherwise report the rejection reason.
-5. Place the paper order with an explicit price: `place_cex_order(symbol="BTC/USDT",
-   side="buy", amount=<btc>, order_type="market", price=<price from step 2>)`.
-   Done when the response has `"mode": "paper"`. A `TypeError` mentioning `agent_id` means
-   ReadyTrader predates PR #5 — report it and stop.
+   Proceed only when `data.result.allowed` is `true`; otherwise report `data.result.reason`
+   and stop. `ok: true` only means the check ran — a refusal is `ok: true` too.
+5. Place the paper order at the market price: `place_cex_order(symbol="BTC/USDT",
+   side="buy", amount=<btc>, order_type="market")` with no `price`. Done when `ok` is `true`
+   and `data.mode` is `"paper"`; report `data.fill.price`, the price the server used. A refusal
+   is `ok: false` with `error.code` — it ends the attempt; report it, do not retry with other
+   numbers: `risk_blocked` (the Risk Guardian refused the order; `error.data.risk` says why),
+   `paper_price_required` (no market price right now),
+   `limit_not_marketable` (a limit that would rest), `insufficient_funds` (the paper wallet
+   cannot pay). A `TypeError` mentioning `agent_id`
+   means ReadyTrader predates PR #5 — report it and stop.
 6. Report symbol, side, amount, fill price, and the paper balance to the user.
 7. If the user asks for live trading at any point: refuse, cite the Phase 4 gate,
    and leave `TRADING_HALTED=true`.
@@ -108,10 +114,16 @@ is DEX and out of scope here — see `references/tool-map.md`.
   HTTP API (`api_server.py`: `/api/health`, `/api/metrics`, `/api/portfolio`,
   `/api/pending-approvals`). Do not call `get_health`, `get_metrics_snapshot`,
   `list_pending_executions`, or `confirm_execution` — they are not registered.
-- Paper `place_cex_order` price: from ReadyTrader-Crypto PR #7 onward, an omitted/≤ 0
-  `price` resolves via the market-data bus or fails with `paper_price_required` (never a
-  fabricated fill). On older revisions it silently fills at a placeholder `100000.0`.
-  Either way, pass the explicit price from step 2 for deterministic fills.
+- Never send `price` on a paper market order. Before ReadyTrader-Crypto PR #20 the paper
+  engine filled a market order at whatever `price` it was given (a stale or wrong number
+  became a fill that never existed) and filled any limit at its own price; from PR #20 a
+  market order fills at the market price and a limit only when marketable. With no price,
+  PR #7 onward uses the market-data bus or answers `paper_price_required`.
+- From PR #20 every order passes the Risk Guardian, so `place_cex_order` itself can answer
+  `risk_blocked` even after `validate_trade_risk` allowed a smaller size.
+- Older revisions answer differently: before PR #20 the keyed news tools return `ok: true`
+  with an "Unavailable … not configured" sentence (still no data) and the live-account order
+  tools fail with `cex_error` instead of `paper_mode_not_supported`.
 - `get_cex_balance`: from PR #7 onward, paper mode returns the paper wallet's balances
   (`mode: "paper"`, no keys needed). On older revisions it requires real exchange keys
   even in paper mode, and the only MCP view of paper balances is the
@@ -131,7 +143,7 @@ is DEX and out of scope here — see `references/tool-map.md`.
 
 - `fetch_ohlcv(symbol="BTC/USDT", timeframe="1m", limit=1)` returns `ok: true` with one
   record containing a numeric `close`.
-- A `place_cex_order` call with an explicit price returns `"mode": "paper"` and no
-  exchange credentials were ever configured.
+- A `place_cex_order` market call without a price returns `"mode": "paper"` with a fill
+  at the market price, and no exchange credentials were ever configured.
 - `~/.hermes/config.yaml` still has `PAPER_MODE: "true"`, `LIVE_TRADING_ENABLED: "false"`,
   `TRADING_HALTED: "true"` after the session (the skill never edits them).

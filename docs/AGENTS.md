@@ -13,7 +13,8 @@ This repo is where the guide is edited first; ReadyTrader-Crypto receives the sa
 ## Local Contracts
 
 - `HERMES_INTEGRATION.md` — venv install, `mcp_servers` entry, verified MCP tool list, smoke checklist, production-halted notes
-- The fenced `yaml` block must equal the `mcp_servers.readytrader-crypto` entry in `skills/finance/readytrader-crypto/references/mcp-config.yaml` (validator compares the whole entry)
+- The first fenced `yaml` block must equal the `mcp_servers.readytrader-crypto` entry in `skills/finance/readytrader-crypto/references/mcp-config.yaml` (validator compares the whole entry); the Docker alternative's block carries the same `env:` and passes every variable into the container with `-e NAME` (validator checks both)
+- Behaviour that differs by ReadyTrader-Crypto revision names the PR and says what older revisions do
 - Link out to ReadyTrader-Crypto for OPS/UAT/live compose; do not duplicate full runbooks here
 
 ## Work Guidance

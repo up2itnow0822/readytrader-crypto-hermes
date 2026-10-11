@@ -45,7 +45,7 @@ Every meaningful change requires a DOX pass. Update the closest owning AGENTS.md
 
 ## Work Guidance
 
-- Every tool name, env var, file path, and Hermes mechanic stated in this repo must be verified against ReadyTrader-Crypto `main` and hermes-agent source before it is written; cite the file when in doubt
+- Every tool name, env var, file path, and Hermes mechanic stated in this repo must be verified against ReadyTrader-Crypto `main` and hermes-agent source before it is written; cite the file when in doubt. Behaviour that ships in an open ReadyTrader-Crypto PR is verified against that PR's branch and named with its PR number (with what older revisions do), and this repo's matching PR merges after it
 - Paper-first only: `PAPER_MODE=true`, `LIVE_TRADING_ENABLED=false`, `TRADING_HALTED=true`, `DEV_MODE=false`; never instruct agents to enable live trading or approve live proposals
 - Entrypoint is `server.py`; Hermes tool names are `mcp__readytrader_crypto__<tool>`
 - Runtime install target is `~/.hermes/skills/finance/readytrader-crypto/` (hub GitHub/URL install or manual copy); `optional-skills/` in a Hermes checkout is a contribution tree only
@@ -57,7 +57,7 @@ Every meaningful change requires a DOX pass. Update the closest owning AGENTS.md
 ## Verification
 
 - `python3 scripts/validate.py` passes (online) or `python3 scripts/validate.py --offline` (no network); CI: `.github/workflows/validate.yml` on push, PR, and weekly
-- Live check: `python3 scripts/validate.py --offline --live --rt-root <ReadyTrader clone> --rt-python <its venv python>` (CI `live-smoke` job, weekly against `main`)
+- Live check: `python3 scripts/validate.py --offline --live --rt-root <ReadyTrader clone> --rt-python <its venv python>` (CI `live-smoke` job against `main` on push, PR, and weekly)
 
 ## User Preferences
 

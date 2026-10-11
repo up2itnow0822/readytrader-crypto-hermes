@@ -22,7 +22,7 @@ material too bulky or too mechanical for the skill body.
 - Only name tools that ReadyTrader-Crypto `server.py` registers; phantom names may appear only in sentences that say they do not exist
 - Every file under `references/` must be referenced from `SKILL.md` by path (`references/<file>`)
 - No `docs/` or parent-directory references from `SKILL.md`; the bundle must be self-contained
-- Paper `place_cex_order` guidance must require an explicit `price`
+- Paper `place_cex_order` guidance must not send a `price` on market orders: the server fills at its market price (before ReadyTrader-Crypto PR #20 a passed price became the fill price, so a stale number produced a fill that never existed)
 - Keep the body under ~150 lines; move detail into `references/`
 
 ## Verification

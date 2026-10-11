@@ -91,9 +91,12 @@ non-existent; env vars exist in ReadyTrader's `settings.py`/`env.example`; links
 secrets or machine-local paths. Online mode fails closed if upstream cannot be fetched.
 
 `--live` launches `server.py` over MCP stdio with the config's env, asserts the 29-tool roster,
-and runs deposit → risk check → paper order. CI runs the static checks on every push and both
-static and live weekly against ReadyTrader-Crypto `main`; a red `live-smoke` job means the
-paper path is broken upstream (it is, on revisions before ReadyTrader-Crypto PR #5).
+and checks every tool behaviour the skill relies on: `get_crypto_price` carries a numeric price;
+deposit → risk check → a paper market order sent without a price fills at the market price;
+`get_news` without keys answers no data; the live-account tools refuse in the paper profile.
+CI runs the static and live checks on every push and pull request, and weekly, against
+ReadyTrader-Crypto `main`; a red `live-smoke` job means the documented paper path drifted
+upstream (or, for the live checks, that the runner cannot reach any market-data venue).
 
 ## Upstream status
 
@@ -104,6 +107,12 @@ paper path is broken upstream (it is, on revisions before ReadyTrader-Crypto PR 
   [PR #7](https://github.com/up2itnow0822/ReadyTrader-Crypto/pull/7) (2026-09-15): `start_cex_private_ws`
   halt-gated, real live-safety tests, `paper_price_required` instead of a fabricated fill, paper-mode
   `get_cex_balance`.
+- ReadyTrader-Crypto [PR #20](https://github.com/up2itnow0822/ReadyTrader-Crypto/pull/20) — public-release UAT:
+  the Risk Guardian runs on every order (`risk_blocked`), paper market orders fill at the market price
+  (a passed `price` is ignored; a limit fills only when marketable), keyed news tools answer
+  `not_configured` without keys, the live-account tools answer `paper_mode_not_supported` in paper mode,
+  and live reads and cancels pass the kill switch. Skill 1.2.0 describes this behaviour and notes what
+  older revisions do.
 - ReadyTrader-Crypto [issue #8](https://github.com/up2itnow0822/ReadyTrader-Crypto/issues/8) — closed by
   [PR #9](https://github.com/up2itnow0822/ReadyTrader-Crypto/pull/9) (merged 2026-09-23): `EXECUTION_MODE=auto`
   (the default) now routes like `hybrid` instead of denying every live venue check. Never affected the

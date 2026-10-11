@@ -25,8 +25,11 @@ Checks (each maps to a rule Hermes or ReadyTrader-Crypto actually enforces):
                 no tracked scratch (.tmp/, tmp/, __pycache__/, venvs).
   dox           Every AGENTS.md link points at an existing file.
   live          (--live) Launch ReadyTrader-Crypto server.py over MCP stdio with the
-                mcp-config.yaml env, assert the 29-tool roster, and run the paper path
-                (deposit -> validate_trade_risk -> place_cex_order with explicit price).
+                mcp-config.yaml env, assert the 29-tool roster, and check every tool
+                behaviour SKILL.md relies on: get_crypto_price carries a numeric data.price;
+                deposit -> validate_trade_risk -> a paper market order sent WITHOUT a price
+                fills at the market price; get_news without keys answers no data; the
+                live-account tools refuse in the paper profile.
 
 Online mode (the default) treats any upstream fetch failure as a failure so drift checks
 cannot silently pass. Exit 0 when everything passes, 1 otherwise. Requires PyYAML.
@@ -90,6 +93,9 @@ NON_TOOL_IDENTIFIERS = {
     "paper_price_required", "paper_engine_missing", "_require_live_allowed",
     "validate_cex_order", "marketdata_bus", "get_balances", "get_fear_greed_index",
     "api_server", "env_private_key", "cb_mpc_2pc", "ccxt_rest",
+    # ReadyTrader answer codes the skill tells the agent how to handle
+    "risk_blocked", "limit_not_marketable", "insufficient_funds", "not_configured", "source_unavailable", "cex_error",
+    "allowed_while_halted",
     # Hermes config keys / modules
     "mcp_servers", "connect_timeout", "skills_hub", "mcp_tool", "skill_manager_tool",
     "test_authoring_standards", "skill_manage", "related_skills", "readytrader_crypto",
@@ -227,6 +233,30 @@ def yaml_block(md: Path) -> dict | None:
     return yaml.safe_load(m.group(1))
 
 
+def check_docker_blocks(paper_env: dict) -> None:
+    """Every other mcp_servers.readytrader-crypto block in the guide (the Docker alternative) must carry
+    the same paper-profile env AND name each variable with `-e NAME` in `docker run`: Hermes hands its
+    env block to the docker command, not to the container, so an unnamed variable silently does not
+    apply (the `docker compose exec` wrapper the guide once suggested lost them all)."""
+    blocks = re.findall(r"```yaml\n(.*?)```", OPERATOR_DOC.read_text(encoding="utf-8"), re.S)[1:]
+    for n, raw in enumerate(blocks, start=2):
+        doc = yaml.safe_load(raw) or {}
+        entry = (doc.get("mcp_servers") or {}).get("readytrader-crypto") if isinstance(doc, dict) else None
+        if not entry:
+            continue
+        where = f"docs/HERMES_INTEGRATION.md yaml block {n}"
+        if (entry.get("env") or {}) != paper_env:
+            fail(f"{where}: env must equal the paper profile in references/mcp-config.yaml")
+        if entry.get("command") == "docker":
+            args = [str(a) for a in entry.get("args") or []]
+            if args[:1] != ["run"] or "-i" not in args:
+                fail(f"{where}: docker entry must be `docker run -i ...` (MCP speaks over stdin)")
+            passed = {args[i + 1] for i, a in enumerate(args[:-1]) if a == "-e"}
+            for name in paper_env:
+                if name not in passed:
+                    fail(f"{where}: env {name} is not passed into the container (`-e, {name}` missing from args)")
+
+
 def check_config() -> dict | None:
     cfg = yaml.safe_load(MCP_CONFIG.read_text(encoding="utf-8")) or {}
     servers = cfg.get("mcp_servers") or {}
@@ -247,6 +277,7 @@ def check_config() -> dict | None:
     for k, v in {"PAPER_MODE": "true", "LIVE_TRADING_ENABLED": "false", "TRADING_HALTED": "true"}.items():
         if str(env.get(k)).lower() != v:
             fail(f"mcp-config.yaml: {k} must be \"{v}\" (paper-first, fail-closed)")
+    check_docker_blocks(env)
     if entry.get("args") != ["server.py"]:
         fail("mcp-config.yaml: args must be [server.py]; `python app/main.py` failed before ReadyTrader-Crypto PR #5")
     if "readytrader-crypto" not in str(entry.get("cwd", "")).lower():
@@ -394,7 +425,7 @@ def check_dox() -> None:
                 fail(f"{agents.relative_to(ROOT)}: link {target} does not exist")
 
 
-LIVE_CLIENT = r'''
+LIVE_CLIENT = r"""
 import asyncio, json, os, sys
 from fastmcp import Client
 from fastmcp.client.transports import StdioTransport
@@ -403,24 +434,58 @@ env = {"PATH": os.environ.get("PATH", ""), "HOME": os.environ.get("HOME", "")}
 env.update({k: str(v) for k, v in (cfg.get("env") or {}).items()})
 for k in ("PAPER_DB_PATH", "AUDIT_DB_PATH", "IDEMPOTENCY_DB_PATH", "EXECUTION_DB_PATH", "INSIGHT_DB_PATH", "STRATEGY_DB_PATH"):
     env[k] = os.path.join(sys.argv[4], k.lower() + ".db")
+env["READYTRADER_DATA_DIR"] = sys.argv[4]
+# The paper profile has no provider keys. Blank them so a .env in the clone (ReadyTrader calls
+# load_dotenv, which never overrides a set variable) cannot change what the keyless checks see.
+for k in ("CRYPTOPANIC_API_KEY", "NEWSAPI_KEY", "TWITTER_BEARER_TOKEN", "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET"):
+    env[k] = ""
+ACCOUNT_TOOLS = [
+    ("get_cex_order", {"exchange": "binance", "order_id": "1", "symbol": "BTC/USDT"}),
+    ("list_cex_open_orders", {}), ("list_cex_orders", {}), ("get_cex_my_trades", {}),
+    ("wait_for_cex_order", {"exchange": "binance", "order_id": "1", "symbol": "BTC/USDT", "timeout_sec": 1}),
+    ("cancel_cex_order", {"exchange": "binance", "order_id": "1", "symbol": "BTC/USDT"}), ("cancel_all_cex_orders", {}),
+    ("replace_cex_order", {"exchange": "binance", "order_id": "1", "symbol": "BTC/USDT", "side": "buy", "amount": 0.001, "order_type": "limit", "price": 50000.0}),
+    ("start_cex_private_ws", {}), ("stop_cex_private_ws", {}), ("list_cex_private_updates", {}),
+    ("transfer_eth", {"to_address": "0x0000000000000000000000000000000000000001", "amount": 0.001}),
+]
 def txt(r): return "".join(getattr(c, "text", "") for c in r.content)
+async def call(c, name, args):
+    r = await c.call_tool(name, args, raise_on_error=False)
+    try:
+        return json.loads(txt(r))
+    except Exception:
+        return {"ok": False, "error": {"code": "unparsed", "message": txt(r)[:200]}}
+def code(r): return (r.get("error") or {}).get("code")
 async def main():
     out = {}
     async with Client(StdioTransport(command=sys.executable, args=list(cfg["args"]), cwd=rt_root, env=env)) as c:
         names = {t.name for t in await c.list_tools()}
         out["missing"] = sorted(expected - names); out["extra"] = sorted(names - expected)
-        r = json.loads(txt(await c.call_tool("deposit_paper_funds", {"asset": "USDT", "amount": 10000.0})))
+        r = await call(c, "get_crypto_price", {"symbol": "BTC/USDT"})
+        price = (r.get("data") or {}).get("price")
+        out["price"] = price if isinstance(price, (int, float)) and not isinstance(price, bool) else None
+        out["price_answer"] = json.dumps(r)[:300]
+        r = await call(c, "deposit_paper_funds", {"asset": "USDT", "amount": 10000.0})
         out["deposit_ok"] = bool(r.get("ok"))
-        r = json.loads(txt(await c.call_tool("validate_trade_risk", {"side": "buy", "symbol": "BTC/USDT", "amount_usd": 100.0, "portfolio_value": 10000.0})))
-        out["risk_ok"] = bool(r.get("ok"))
-        try:
-            r = json.loads(txt(await c.call_tool("place_cex_order", {"symbol": "BTC/USDT", "side": "buy", "amount": 0.001, "order_type": "market", "price": 65000.0})))
-            out["order_mode"] = (r.get("data") or {}).get("mode"); out["order_ok"] = bool(r.get("ok"))
-        except Exception as exc:
-            out["order_ok"] = False; out["order_error"] = str(exc)[:300]
+        # SKILL.md step 4 proceeds only on data.result.allowed. ok is true for a refusal too.
+        r = await call(c, "validate_trade_risk", {"side": "buy", "symbol": "BTC/USDT", "amount_usd": 100.0, "portfolio_value": 10000.0})
+        out["risk_small"] = ((r.get("data") or {}).get("result") or {}).get("allowed")
+        r = await call(c, "validate_trade_risk", {"side": "buy", "symbol": "BTC/USDT", "amount_usd": 2000.0, "portfolio_value": 10000.0})
+        out["risk_large"] = ((r.get("data") or {}).get("result") or {}).get("allowed")
+        # The Procedure's order: a market order with no price; the server must fill it at its market price.
+        r = await call(c, "place_cex_order", {"symbol": "BTC/USDT", "side": "buy", "amount": 0.001, "order_type": "market"})
+        data = r.get("data") or {}
+        out["order_ok"] = bool(r.get("ok")); out["order_mode"] = data.get("mode")
+        out["fill_price"] = (data.get("fill") or {}).get("price"); out["order_answer"] = json.dumps(r)[:300]
+        # ReadyTrader-Crypto PR #20 and later report the Risk Guardian's sizing on every paper fill.
+        out["pr20"] = "risk" in data
+        r = await call(c, "get_news", {})
+        out["news"] = {"ok": bool(r.get("ok")), "code": code(r), "text": json.dumps(r.get("data"))[:300]}
+        out["account"] = {name: ("ok" if r.get("ok") else code(r)) for name, r in
+                          [(n, await call(c, n, a)) for n, a in ACCOUNT_TOOLS]}
     print(json.dumps(out))
 asyncio.run(main())
-'''
+"""
 
 
 def check_live(rt_root: Path, rt_python: Path, entry: dict | None, tmp: Path) -> None:
@@ -432,7 +497,7 @@ def check_live(rt_root: Path, rt_python: Path, entry: dict | None, tmp: Path) ->
     tmp.mkdir(parents=True, exist_ok=True)
     proc = subprocess.run(
         [str(rt_python), "-c", LIVE_CLIENT, json.dumps(entry), str(rt_root), json.dumps(sorted(EXPECTED_TOOLS)), str(tmp)],
-        capture_output=True, text=True, timeout=240,
+        capture_output=True, text=True, timeout=300,
     )
     if proc.returncode != 0:
         fail(f"--live: MCP client failed: {proc.stderr.strip()[-400:]}")
@@ -440,12 +505,33 @@ def check_live(rt_root: Path, rt_python: Path, entry: dict | None, tmp: Path) ->
     out = json.loads(proc.stdout.strip().splitlines()[-1])
     if out["missing"] or out["extra"]:
         fail(f"--live: tool roster drift: missing={out['missing']} extra={out['extra']}")
+    price = out.get("price")
+    if not price or price <= 0:
+        fail(f"--live: get_crypto_price has no positive numeric data.price (SKILL.md Procedure step 2; or no market-data venue is reachable): {out.get('price_answer')}")
     if not out["deposit_ok"]:
         fail("--live: deposit_paper_funds failed")
-    if not out["risk_ok"]:
-        fail("--live: validate_trade_risk failed")
+    if out.get("risk_small") is not True or out.get("risk_large") is not False:
+        fail(f"--live: validate_trade_risk data.result.allowed should be true for 1% and false for 20% of the portfolio (SKILL.md step 4): {out.get('risk_small')}, {out.get('risk_large')}")
     if not out.get("order_ok") or out.get("order_mode") != "paper":
-        fail(f"--live: paper place_cex_order failed: {out.get('order_error') or out}")
+        fail(f"--live: paper place_cex_order (market, no price) failed: {out.get('order_answer')}")
+    elif price and price > 0:
+        fill = out.get("fill_price")
+        if not isinstance(fill, (int, float)) or abs(fill - price) / price > 0.05:
+            fail(f"--live: paper market order did not fill at the market price (market {price}, fill {fill})")
+    pr20 = bool(out.get("pr20"))
+    news = out.get("news") or {}
+    if pr20:
+        keyless_ok = not news.get("ok") and news.get("code") == "not_configured"
+    else:  # before ReadyTrader-Crypto PR #20: ok with an "Unavailable ... not configured" sentence
+        keyless_ok = (not news.get("ok") and news.get("code") == "not_configured") or (
+            news.get("ok") and "not configured" in (news.get("text") or "").lower())
+    if not keyless_ok:
+        fail(f"--live: get_news without keys should answer no data (not_configured){'' if pr20 else ' or, before PR #20, an Unavailable sentence'}: {news}")
+    account = out.get("account") or {}
+    allowed = {"paper_mode_not_supported"} if pr20 else {"paper_mode_not_supported", "cex_error"}
+    wrong = {k: v for k, v in account.items() if v not in allowed}
+    if len(account) != 12 or wrong:
+        fail(f"--live: live-account tools in the paper profile should answer {sorted(allowed)} (references/tool-map.md): {wrong or account}")
 
 
 def main() -> int:
